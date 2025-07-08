@@ -16,7 +16,7 @@ export class Room {
             timeLeft: DEFAULT_ROOM_SETTING.focusTime * 60, // in seconds
             lastUpdatedAt: null
         }
-        this.setting = { ...DEFAULT_ROOM_SETTING }
+        this.settings = { ...DEFAULT_ROOM_SETTING }
         this.deleteTimeout = null
     }
 
