@@ -13,7 +13,7 @@ export class Room {
         this.timer = {
             isRunning: false,
             phase: 'focus', // || "break"
-            timeLeft: DEFAULT_ROOM_SETTING.focusTime,
+            timeLeft: DEFAULT_ROOM_SETTING.focusTime * 60, // in seconds
             lastUpdatedAt: null
         }
         this.setting = { ...DEFAULT_ROOM_SETTING }
@@ -40,7 +40,7 @@ export class Room {
     }
 
     resetTimer() {
-        const time = this.setting[this.timer.phase + "Time"]
+        const time = this.setting[this.timer.phase + "Time"] * 60
         this.timer = {
             isRunning: false,
             phase: 'focus',

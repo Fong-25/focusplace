@@ -9,7 +9,7 @@ import ResetTheme from "../components/resetTheme"
 import Warning from "../components/warning"
 import { Link, useNavigate } from "react-router-dom"
 
-export default function Signup() {
+function Signup() {
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
         username: "",
@@ -329,3 +329,4 @@ export default function Signup() {
         </div>
     )
 }
+export default Signup

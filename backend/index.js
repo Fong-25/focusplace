@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import authRoutes from './routes/auth.route.js'
+import roomRoutes from './routes/room.route.js'
 import { connectDB } from './config/db.js'
 import http from 'http'
 import { Server } from 'socket.io'
@@ -37,6 +38,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/rooms', roomRoutes)
 
 const PORT = process.env.PORT || 3000
 
