@@ -1,5 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
 
 // No fallback - settings will be fetched from backend
 
@@ -10,6 +12,7 @@ export const useLobbyStore = create(
             currentRoom: null,
             recentRooms: [],
             isInRoom: false,
+            roomData: null,
 
             // Modal states
             isJoinModalOpen: false,
@@ -25,7 +28,7 @@ export const useLobbyStore = create(
             isDefaultSettingsLoaded: false,
 
             // UI state
-            isLoading: false,
+            // isLoading: false,
             settingsEnabled: false,
 
             // Actions
@@ -82,93 +85,54 @@ export const useLobbyStore = create(
             },
 
             // Room operations
-            joinRoom: async (roomId) => {
-                set({ isLoading: true })
-                try {
-                    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-                    if (roomId.length < 4) {
-                        throw new Error("Room ID must be at least 4 characters long")
-                    }
-
-                    if (roomId === "invalid") {
-                        throw new Error("Room not found. Please check the room ID and try again.")
-                    }
-
-                    const room = {
-                        id: roomId,
-                        name: `Room ${roomId}`,
-                        joinedAt: new Date().toISOString(),
-                        type: "joined",
-                    }
-
-                    set({
-                        currentRoom: room,
-                        isInRoom: true,
-                        isJoinModalOpen: false,
-                    })
-
-                    const { recentRooms } = get()
-                    const updatedRooms = [room, ...recentRooms.filter((r) => r.id !== roomId)].slice(0, 5)
-                    set({ recentRooms: updatedRooms })
-
-                    return { success: true, room }
-                } catch (error) {
-                    throw error
-                } finally {
-                    set({ isLoading: false })
+            joinRoom: (socket, roomId, user) => {
+                if (roomId.length < 4) {
+                    toast.error('Room ID must be at least 4 characters long');
+                    return;
                 }
+                socket.emit('joinRoom', { roomId, user });
             },
 
-            createRoom: async (roomId, settings) => {
-                set({ isLoading: true })
-                try {
-                    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-                    if (roomId.length < 4) {
-                        throw new Error("Room ID must be at least 4 characters long")
-                    }
-
-                    if (roomId === "taken") {
-                        throw new Error("Room ID is already taken. Please choose a different one.")
-                    }
-
-                    const { defaultRoomSettings } = get()
-                    const room = {
-                        id: roomId,
-                        name: `Room ${roomId}`,
-                        createdAt: new Date().toISOString(),
-                        type: "created",
-                        settings: settings || (defaultRoomSettings ? { ...defaultRoomSettings } : null),
-                    }
-
-                    set({
-                        currentRoom: room,
-                        isInRoom: true,
-                        isCreateModalOpen: false,
-                    })
-
-                    const { recentRooms } = get()
-                    const updatedRooms = [room, ...recentRooms.filter((r) => r.id !== roomId)].slice(0, 5)
-                    set({ recentRooms: updatedRooms })
-
-                    return { success: true, room }
-                } catch (error) {
-                    throw error
-                } finally {
-                    set({ isLoading: false })
+            createRoom: (socket, roomId, user, settings) => {
+                if (roomId.length < 4) {
+                    toast.error('Room ID must be at least 4 characters long');
+                    return;
                 }
+                socket.emit('createRoom', { roomId, user, settings });
             },
 
-            leaveRoom: () => {
-                set({
-                    currentRoom: null,
-                    isInRoom: false,
-                })
+            setRoomData: (roomData) => set({ roomData, isInRoom: true }),
+
+            leaveRoom: (socket, roomId, user, callback) => {
+                return new Promise((resolve) => {
+                    if (socket && roomId && user) {
+                        socket.emit('leaveRoom', { roomId, userId: user.id }, () => {
+                            // Server acknowledges leave
+                            set({
+                                currentRoom: null,
+                                isInRoom: false,
+                                roomData: null,
+                                isJoinModalOpen: false,
+                                isCreateModalOpen: false,
+                            });
+                            resolve();
+                            if (callback) callback();
+                        });
+                    } else {
+                        set({
+                            currentRoom: null,
+                            isInRoom: false,
+                            roomData: null,
+                            isJoinModalOpen: false,
+                            isCreateModalOpen: false,
+                        });
+                        resolve();
+                    }
+                });
             },
 
             clearRecentRooms: () => {
-                set({ recentRooms: [] })
+                set({ recentRooms: [] });
             },
         }),
         {
