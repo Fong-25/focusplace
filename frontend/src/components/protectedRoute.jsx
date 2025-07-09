@@ -51,7 +51,7 @@ export default function ProtectedRoute({ children }) {
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-        return navigate('/')
+        return navigate('/login')
     }
 
     // Provide user data to children

@@ -57,6 +57,12 @@ export const setupSocket = (io) => {
                 return socket.emit('error', { message: 'Room does not exist.' })
             }
 
+            if (room.deleteTimeout) {
+                clearTimeout(room.deleteTimeout)
+                room.deleteTimeout = null
+                console.log(`Room ${roomId} deletion cancelled - user rejoined`)
+            }
+
             room.addUser(socket.id, user)
             socket.join(roomId)
 
@@ -69,27 +75,65 @@ export const setupSocket = (io) => {
             console.log(`${user.username} joined ${roomId}`)
         })
 
+        // Handle leaving a room
+        socket.on('leaveRoom', ({ roomId, userId }, callback) => {
+            const room = rooms.get(roomId);
+            if (room && room.users.has(socket.id)) {
+                const user = room.users.get(socket.id);
+                if (user.id === userId) {
+                    room.removeUser(socket.id);
+                    socket.to(roomId).emit('userLeft', { userId });
+                    socket.leave(roomId);
+                    console.log(`${user.username} left ${roomId}`);
+
+                    if (room.isEmpty()) {
+                        clearTimeout(room.deleteTimeout);
+                        room.deleteTimeout = setTimeout(() => {
+                            rooms.delete(roomId);
+                            console.log(`Room ${roomId} deleted`);
+                        }, 2 * 60 * 1000);
+                    } else if (room.hostId === userId) {
+                        // Host left, transfer to next user
+                        const userIds = Array.from(room.users.values()).map(u => u.id);
+                        const newHostId = userIds.find(id => id !== userId) || null;
+                        if (newHostId) {
+                            room.hostId = newHostId;
+                            io.to(roomId).emit('hostTransferred', { newHostId, room: room.toPublic() });
+                            console.log(`Host transferred to ${newHostId} in ${roomId}`);
+                        }
+                    }
+                    if (callback) callback();
+                }
+            }
+        });
+
         // Handle disconnection
         socket.on('disconnect', () => {
-            console.log(`${socket.id} disconnected`)
+            console.log(`${socket.id} disconnected`);
             for (const [roomId, room] of rooms) {
                 if (room.users.has(socket.id)) {
-                    const user = room.users.get(socket.id)
-                    room.removeUser(socket.id)
-                    socket.to(roomId).emit('userLeft', { userId: user.id })
-
-                    // Optional: auto-promote host if needed
+                    const user = room.users.get(socket.id);
+                    room.removeUser(socket.id);
+                    socket.to(roomId).emit('userLeft', { userId: user.id });
 
                     if (room.isEmpty()) {
                         // Delete after 2 min grace period
                         room.deleteTimeout = setTimeout(() => {
-                            rooms.delete(roomId)
-                            console.log(`Room ${roomId} deleted`)
-                        }, 2 * 60 * 1000)
+                            rooms.delete(roomId);
+                            console.log(`Room ${roomId} deleted`);
+                        }, 2 * 60 * 1000);
+                    } else if (room.hostId === user.id) {
+                        const userIds = Array.from(room.users.values()).map(u => u.id);
+                        const newHostId = userIds.find(id => id !== user.id) || null;
+                        if (newHostId) {
+                            room.setHost(newHostId); // Use the model method
+                            io.to(roomId).emit('hostTransferred', { newHostId, room: room.toPublic() });
+                            console.log(`Host transferred to ${newHostId} in ${roomId} after disconnect`);
+                        }
                     }
-                    break
+                    break;
                 }
             }
-        })
-    })
-}
+        });
+    });
+};

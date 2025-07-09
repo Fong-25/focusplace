@@ -77,6 +77,7 @@ function RoomModal({
                                 {type === "join" ? "Enter Room ID to Join" : "Choose a Room ID"}
                             </label>
                             <input
+                                autoComplete="off"
                                 type="text"
                                 id="roomId"
                                 value={roomId}
