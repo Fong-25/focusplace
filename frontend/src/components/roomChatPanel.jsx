@@ -5,10 +5,10 @@ import { useThemeStore } from "../stores/themeStore"
 import { useRoomStore } from "../stores/roomStore"
 import { useEffect, useRef } from "react"
 
-function RoomChatPanel({ isOpen, onClose, currentUser }) {
+function RoomChatPanel({ isOpen, onClose, currentUser, socket, roomId }) {
     const { getTheme } = useThemeStore()
     const theme = getTheme()
-    const { messages, newMessage, setNewMessage, addMessage } = useRoomStore()
+    const { messages, newMessage, setNewMessage, sendMessage } = useRoomStore()
     const messagesEndRef = useRef(null)
     const inputRef = useRef(null)
 
@@ -28,8 +28,8 @@ function RoomChatPanel({ isOpen, onClose, currentUser }) {
 
     const handleSendMessage = (e) => {
         e.preventDefault()
-        if (newMessage.trim() && currentUser) {
-            addMessage(currentUser.username, newMessage.trim())
+        if (newMessage.trim() && currentUser && socket && roomId) {
+            sendMessage(socket, roomId, newMessage.trim())
         }
     }
 
@@ -71,31 +71,41 @@ function RoomChatPanel({ isOpen, onClose, currentUser }) {
 
                     {/* Messages Area */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {messages.slice(-50).map((message) => (
-                            <div
-                                key={message.id}
-                                className={`
-                                            ${message.isSystem ? "text-center" : ""}
-                                            `}
-                            >
-                                {message.isSystem ? (
-                                    <div className={`text-xs ${theme.textMuted} italic`}>{message.message}</div>
-                                ) : (
-                                    <div className={`p-3 rounded-lg ${theme.secondary}`}>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className={`text-sm font-medium ${theme.text}`}>
-                                                {message.username}
-                                                {message.username === currentUser?.username && (
-                                                    <span className={`ml-1 text-xs ${theme.textMuted}`}>(You)</span>
-                                                )}
-                                            </span>
-                                            <span className={`text-xs ${theme.textMuted}`}>{formatTime(message.timestamp)}</span>
-                                        </div>
-                                        <p className={`text-sm ${theme.text}`}>{message.message}</p>
-                                    </div>
-                                )}
+                        {messages.length === 0 ? (
+                            <div className={`text-center text-sm ${theme.textMuted} italic`}>
+                                No messages yet. Start the conversation!
                             </div>
-                        ))}
+                        ) : (
+                            messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`
+                                                ${message.isSystem ? "text-center" : ""}
+                                                `}
+                                >
+                                    {message.isSystem ? (
+                                        <div className={`text-xs ${theme.textMuted} italic px-2 py-1`}>
+                                            {message.message}
+                                        </div>
+                                    ) : (
+                                        <div className={`p-3 rounded-lg ${theme.secondary}`}>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className={`text-sm font-medium ${theme.text}`}>
+                                                    {message.username}
+                                                    {message.username === currentUser?.username && (
+                                                        <span className={`ml-1 text-xs ${theme.textMuted}`}>(You)</span>
+                                                    )}
+                                                </span>
+                                                <span className={`text-xs ${theme.textMuted}`}>
+                                                    {formatTime(message.timestamp)}
+                                                </span>
+                                            </div>
+                                            <p className={`text-sm ${theme.text} break-words`}>{message.message}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -115,10 +125,11 @@ function RoomChatPanel({ isOpen, onClose, currentUser }) {
                                             placeholder-gray-400
                                         `}
                                 maxLength={500}
+                                disabled={!socket || !roomId}
                             />
                             <button
                                 type="submit"
-                                disabled={!newMessage.trim()}
+                                disabled={!newMessage.trim() || !socket || !roomId}
                                 className={`
                                             p-2 rounded-lg transition-all duration-200
                                             ${theme.primary} ${theme.primaryText}

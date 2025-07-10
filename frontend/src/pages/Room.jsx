@@ -22,7 +22,7 @@ function Room() {
     const theme = getTheme()
     const { socket, isConnected } = useContext(SocketContext)
     const { roomData, setRoomData, leaveRoom } = useLobbyStore()
-    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen } = useRoomStore()
+    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen, addSocketMessage, clearMessages } = useRoomStore()
 
     const [isLoading, setIsLoading] = useState(true)
     const [isLeaving, setIsLeaving] = useState(false)
@@ -74,6 +74,13 @@ function Room() {
             }
         })
 
+        // Listen for chat messages
+        socket.on("chatMessage", (message) => {
+            if (!isLeaving) {
+                addSocketMessage(message)
+            }
+        })
+
         socket.on("error", ({ message }) => {
             if (!isLeaving) {
                 toast.error(message)
@@ -83,6 +90,8 @@ function Room() {
 
         // Request room data if not already loaded and not leaving
         if (!isLeaving && (!roomData || roomData.roomId !== roomId)) {
+            // Clear messages when joining a new room
+            clearMessages()
             socket.emit("joinRoom", { roomId, user })
         } else if (!isLeaving) {
             setIsLoading(false)
@@ -93,12 +102,15 @@ function Room() {
             socket.off("userJoined")
             socket.off("userLeft")
             socket.off("hostTransferred")
+            socket.off("chatMessage")
             socket.off("error")
         }
-    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving])
+    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving, addSocketMessage, clearMessages])
 
     const handleLeaveRoom = () => {
         setIsLeaving(true)
+        // Clear messages when leaving room
+        clearMessages()
         leaveRoom(socket, roomId, user, () => {
             setIsLeaving(false)
             navigate("/lobby")
@@ -190,7 +202,13 @@ function Room() {
                     </main>
 
                     {/* Right Panel */}
-                    <RoomChatPanel isOpen={isRightPanelOpen} onClose={() => setRightPanelOpen(false)} currentUser={user} />
+                    <RoomChatPanel
+                        isOpen={isRightPanelOpen}
+                        onClose={() => setRightPanelOpen(false)}
+                        currentUser={user}
+                        socket={socket}
+                        roomId={roomId}
+                    />
                 </div>
             </div>
 

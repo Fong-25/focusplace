@@ -45,6 +45,16 @@ export const setupSocket = (io) => {
             rooms.set(roomId, newRoom)
             socket.join(roomId)
 
+            // Send welcome message to room creator
+            const welcomeMessage = {
+                id: Date.now(),
+                username: "System",
+                message: `Welcome to room ${roomId}! You are the host.`,
+                timestamp: Date.now(),
+                isSystem: true
+            }
+            socket.emit('chatMessage', welcomeMessage)
+
             socket.emit('roomCreated', newRoom.toPublic())
             console.log(` Room ${roomId} created by ${user.username}`)
         })
@@ -66,6 +76,26 @@ export const setupSocket = (io) => {
             room.addUser(socket.id, user)
             socket.join(roomId)
 
+            // Send system message to new user
+            const welcomeMessage = {
+                id: Date.now(),
+                username: "System",
+                message: `Welcome to room ${roomId}!`,
+                timestamp: Date.now(),
+                isSystem: true
+            }
+            socket.emit('chatMessage', welcomeMessage)
+
+            // Send join notification to other users in room
+            const joinMessage = {
+                id: Date.now() + 1,
+                username: "System",
+                message: `${user.username} joined the room`,
+                timestamp: Date.now(),
+                isSystem: true
+            }
+            socket.to(roomId).emit('chatMessage', joinMessage)
+
             socket.emit('roomJoined', {
                 ...room.toPublic(),
                 isHost: room.hostId === user.id
@@ -75,6 +105,27 @@ export const setupSocket = (io) => {
             console.log(`${user.username} joined ${roomId}`)
         })
 
+        // Handle chat messages
+        socket.on('sendMessage', ({ roomId, message }) => {
+            const room = rooms.get(roomId)
+            if (!room || !room.users.has(socket.id)) {
+                return socket.emit('error', { message: 'You are not in this room.' })
+            }
+
+            const user = room.users.get(socket.id)
+            const chatMessage = {
+                id: Date.now(),
+                username: user.username,
+                message: message.trim(),
+                timestamp: Date.now(),
+                isSystem: false
+            }
+
+            // Send message to all users in the room
+            io.to(roomId).emit('chatMessage', chatMessage)
+            console.log(`${user.username} in ${roomId}: ${message}`)
+        })
+
         // Handle leaving a room
         socket.on('leaveRoom', ({ roomId, userId }, callback) => {
             const room = rooms.get(roomId);
@@ -82,6 +133,17 @@ export const setupSocket = (io) => {
                 const user = room.users.get(socket.id);
                 if (user.id === userId) {
                     room.removeUser(socket.id);
+
+                    // Send leave notification to other users
+                    const leaveMessage = {
+                        id: Date.now(),
+                        username: "System",
+                        message: `${user.username} left the room`,
+                        timestamp: Date.now(),
+                        isSystem: true
+                    }
+                    socket.to(roomId).emit('chatMessage', leaveMessage)
+
                     socket.to(roomId).emit('userLeft', { userId });
                     socket.leave(roomId);
                     console.log(`${user.username} left ${roomId}`);
@@ -97,7 +159,19 @@ export const setupSocket = (io) => {
                         const userIds = Array.from(room.users.values()).map(u => u.id);
                         const newHostId = userIds.find(id => id !== userId) || null;
                         if (newHostId) {
+                            const newHost = Array.from(room.users.values()).find(u => u.id === newHostId);
                             room.hostId = newHostId;
+
+                            // Send host transfer notification
+                            const hostTransferMessage = {
+                                id: Date.now() + 1,
+                                username: "System",
+                                message: `${newHost.username} is now the host`,
+                                timestamp: Date.now(),
+                                isSystem: true
+                            }
+                            io.to(roomId).emit('chatMessage', hostTransferMessage)
+
                             io.to(roomId).emit('hostTransferred', { newHostId, room: room.toPublic() });
                             console.log(`Host transferred to ${newHostId} in ${roomId}`);
                         }
@@ -114,6 +188,17 @@ export const setupSocket = (io) => {
                 if (room.users.has(socket.id)) {
                     const user = room.users.get(socket.id);
                     room.removeUser(socket.id);
+
+                    // Send disconnect notification to other users
+                    const disconnectMessage = {
+                        id: Date.now(),
+                        username: "System",
+                        message: `${user.username} disconnected`,
+                        timestamp: Date.now(),
+                        isSystem: true
+                    }
+                    socket.to(roomId).emit('chatMessage', disconnectMessage)
+
                     socket.to(roomId).emit('userLeft', { userId: user.id });
 
                     if (room.isEmpty()) {
@@ -126,7 +211,19 @@ export const setupSocket = (io) => {
                         const userIds = Array.from(room.users.values()).map(u => u.id);
                         const newHostId = userIds.find(id => id !== user.id) || null;
                         if (newHostId) {
+                            const newHost = Array.from(room.users.values()).find(u => u.id === newHostId);
                             room.setHost(newHostId); // Use the model method
+
+                            // Send host transfer notification
+                            const hostTransferMessage = {
+                                id: Date.now() + 1,
+                                username: "System",
+                                message: `${newHost.username} is now the host`,
+                                timestamp: Date.now(),
+                                isSystem: true
+                            }
+                            io.to(roomId).emit('chatMessage', hostTransferMessage)
+
                             io.to(roomId).emit('hostTransferred', { newHostId, room: room.toPublic() });
                             console.log(`Host transferred to ${newHostId} in ${roomId} after disconnect`);
                         }
