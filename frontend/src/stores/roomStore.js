@@ -16,8 +16,9 @@ export const useRoomStore = create(
             // Chat state (simulate)
             messages: [
                 { id: 1, username: "System", message: "Welcome to the room!", timestamp: Date.now(), isSystem: true },
-                { id: 2, username: "Alice", message: "Hey everyone!", timestamp: Date.now() - 60000 },
-                { id: 3, username: "Bob", message: "Ready to focus?", timestamp: Date.now() - 30000 },
+                { id: 2, username: "System", message: "Always check for connection status!", timestamp: Date.now(), isSystem: true },
+                { id: 3, username: "Alice", message: "Hey everyone!", timestamp: Date.now() - 60000 },
+                { id: 4, username: "Bob", message: "Ready to focus?", timestamp: Date.now() - 30000 },
             ],
             newMessage: "",
 

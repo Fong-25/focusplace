@@ -14,7 +14,7 @@ import RoomTimer from "../components/roomTimer"
 import RoomLeftPanel from "../components/roomLeftPanel"
 import RoomChatPanel from "../components/roomChatPanel"
 
-export default function RoomPage() {
+function Room() {
     const { roomId } = useParams()
     const { user } = useUser()
     const navigate = useNavigate()
@@ -229,3 +229,4 @@ export default function RoomPage() {
         </div>
     )
 }
+export default Room
