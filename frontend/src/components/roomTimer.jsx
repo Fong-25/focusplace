@@ -2,14 +2,13 @@
 
 import { Play, Pause, RotateCcw } from "lucide-react"
 import { useThemeStore } from "../stores/themeStore"
-import { useRoomStore } from "../stores/roomStore"
+import { useLobbyStore } from "../stores/lobbyStore"
 
-function RoomTimer({ isHost = false }) {
+function RoomTimer({ isHost = false, socket, roomId }) {
     const { getTheme } = useThemeStore()
     const theme = getTheme()
-    const { focusTime, breakTime, isRunning, startTimer, pauseTimer, resetTimer } = useRoomStore()
+    const { roomData } = useLobbyStore()
 
-    // Format time to hours, minutes, seconds
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600)
         const minutes = Math.floor((seconds % 3600) / 60)
@@ -36,37 +35,43 @@ function RoomTimer({ isHost = false }) {
         }
     }
 
+    const handleStart = () => {
+        socket.emit('startTimer', { roomId })
+    }
+
+    const handlePause = () => {
+        socket.emit('pauseTimer', { roomId })
+    }
+
+    const handleReset = () => {
+        socket.emit('resetTimer', { roomId })
+    }
+
+    if (!roomData) return null
+
     return (
         <div className="flex flex-col items-center justify-center h-full p-8">
-            {/* Main Focus Timer Display */}
             <div className="text-center mb-4">
                 <div className={`text-6xl md:text-8xl font-mono font-bold mb-2 ${theme.text}`}>
-                    {formatDigitalTime(focusTime)}
+                    {formatDigitalTime(roomData.timer.timeLeft)}
                 </div>
-                <div className={`text-sm ${theme.textMuted} mb-2`}>Focus Time</div>
+                <div className={`text-sm ${theme.textMuted} mb-2`}>
+                    {roomData.timer.phase === 'focus' ? roomData.settings.focusPhaseName : roomData.settings.breakPhaseName}
+                </div>
             </div>
 
-            {/* Secondary Break Timer Display */}
-            <div className="text-center mb-8">
-                <div className={`text-2xl md:text-3xl font-mono font-medium ${theme.textMuted}`}>
-                    {formatDigitalTime(breakTime)}
-                </div>
-                <div className={`text-xs ${theme.textMuted}`}>Break Time</div>
-            </div>
-
-            {/* Timer Controls - Only for Host */}
-            {isHost ? (
+            {(isHost || !roomData.settings.strictMode) ? (
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={isRunning ? pauseTimer : startTimer}
+                        onClick={roomData.timer.isRunning ? handlePause : handleStart}
                         className={`
-              flex items-center gap-2 px-6 py-3 rounded-lg text-lg font-medium
-              transition-all duration-200 transform hover:scale-105
-              ${theme.primary} ${theme.primaryText}
-              focus:outline-none focus:ring-2 focus:ring-offset-2
-            `}
+                            flex items-center gap-2 px-6 py-3 rounded-lg text-lg font-medium
+                            transition-all duration-200 transform hover:scale-105
+                            ${theme.primary} ${theme.primaryText}
+                            focus:outline-none focus:ring-2 focus:ring-offset-2
+                        `}
                     >
-                        {isRunning ? (
+                        {roomData.timer.isRunning ? (
                             <>
                                 <Pause className="w-6 h-6" />
                                 Pause
@@ -80,14 +85,14 @@ function RoomTimer({ isHost = false }) {
                     </button>
 
                     <button
-                        onClick={resetTimer}
+                        onClick={handleReset}
                         className={`
-              flex items-center gap-2 px-6 py-3 rounded-lg text-lg font-medium
-              transition-all duration-200 transform hover:scale-105 border-2
-              ${theme.secondary} ${theme.secondaryText} ${theme.border}
-              hover:${theme.primary} hover:${theme.primaryText}
-              focus:outline-none focus:ring-2 focus:ring-offset-2
-            `}
+                            flex items-center gap-2 px-6 py-3 rounded-lg text-lg font-medium
+                            transition-all duration-200 transform hover:scale-105 border-2
+                            ${theme.secondary} ${theme.secondaryText} ${theme.border}
+                            hover:${theme.primary} hover:${theme.primaryText}
+                            focus:outline-none focus:ring-2 focus:ring-offset-2
+                        `}
                     >
                         <RotateCcw className="w-6 h-6" />
                         Reset

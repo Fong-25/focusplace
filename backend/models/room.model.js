@@ -39,14 +39,44 @@ export class Room {
         this.hostId = newHostId
     }
 
+    startTimer() {
+        if (!this.timer.isRunning) {
+            this.timer.isRunning = true
+            this.timer.lastUpdatedAt = Date.now()
+        }
+    }
+
+    pauseTimer() {
+        if (this.timer.isRunning) {
+            this.timer.isRunning = false
+            this.timer.timeLeft = Math.max(0, this.timer.timeLeft - Math.floor((Date.now() - this.timer.lastUpdatedAt) / 1000))
+            this.timer.lastUpdatedAt = null
+        }
+    }
+
     resetTimer() {
-        const time = this.setting[this.timer.phase + "Time"] * 60
+        // const time = this.settings[this.timer.phase + "Time"] * 60
+        const time = this.settings.focusTime * 60
         this.timer = {
             isRunning: false,
             phase: 'focus',
             timeLeft: time,
             lastUpdatedAt: null
         }
+    }
+
+    updateTimer() {
+        if (this.timer.isRunning && this.timer.lastUpdatedAt) {
+            const elapsed = Math.floor((Date.now() - this.timer.lastUpdatedAt) / 1000)
+            this.timer.timeLeft = Math.max(0, this.timer.timeLeft - elapsed)
+            this.timer.lastUpdatedAt = Date.now()
+        }
+    }
+
+    switchPhase() {
+        this.timer.phase = this.timer.phase === 'focus' ? 'break' : 'focus'
+        this.timer.timeLeft = this.settings[`${this.timer.phase}Time`] * 60
+        this.timer.lastUpdatedAt = this.timer.isRunning ? Date.now() : null
     }
 
     updateTimerState({ phase, timeLeft, isRunning, lastUpdatedAt }) {
