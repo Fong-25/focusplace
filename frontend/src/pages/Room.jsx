@@ -22,13 +22,12 @@ function Room() {
     const theme = getTheme()
     const { socket, isConnected } = useContext(SocketContext)
     const { roomData, setRoomData, leaveRoom } = useLobbyStore()
-    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen } = useRoomStore()
+    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen, addSocketMessage, clearMessages } = useRoomStore()
 
     const [isLoading, setIsLoading] = useState(true)
     const [isLeaving, setIsLeaving] = useState(false)
     const [isConnecting, setIsConnecting] = useState(false)
 
-    // Check if current user is host
     const isHost = roomData?.hostId === user?.id
 
     useEffect(() => {
@@ -38,7 +37,6 @@ function Room() {
             return
         }
 
-        // Listen for room updates
         socket.on("roomJoined", (data) => {
             if (!isLeaving) {
                 setRoomData(data)
@@ -74,6 +72,42 @@ function Room() {
             }
         })
 
+        socket.on("chatMessage", (message) => {
+            if (!isLeaving) {
+                addSocketMessage(message)
+            }
+        })
+
+        socket.on("timerUpdate", (timer) => {
+            if (!isLeaving) {
+                setRoomData({ ...roomData, timer })
+            }
+        })
+
+        socket.on("timerStarted", () => {
+            if (!isLeaving) {
+                toast.success("Timer started")
+            }
+        })
+
+        socket.on("timerPause", () => {
+            if (!isLeaving) {
+                toast.success("Timer paused")
+            }
+        })
+
+        socket.on("timerReset", () => {
+            if (!isLeaving) {
+                toast.success("Timer reset")
+            }
+        })
+
+        socket.on("phaseSwitched", ({ phase }) => {
+            if (!isLeaving) {
+                toast.success(`Switched to ${phase} phase`)
+            }
+        })
+
         socket.on("error", ({ message }) => {
             if (!isLeaving) {
                 toast.error(message)
@@ -81,8 +115,8 @@ function Room() {
             }
         })
 
-        // Request room data if not already loaded and not leaving
         if (!isLeaving && (!roomData || roomData.roomId !== roomId)) {
+            clearMessages()
             socket.emit("joinRoom", { roomId, user })
         } else if (!isLeaving) {
             setIsLoading(false)
@@ -93,12 +127,19 @@ function Room() {
             socket.off("userJoined")
             socket.off("userLeft")
             socket.off("hostTransferred")
+            socket.off("chatMessage")
+            socket.off("timerUpdate")
+            socket.off('timerStarted')
+            socket.off('timerPause')
+            socket.off('timerReset')
+            socket.off('phaseSwitched')
             socket.off("error")
         }
-    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving])
+    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving, addSocketMessage, clearMessages])
 
     const handleLeaveRoom = () => {
         setIsLeaving(true)
+        clearMessages()
         leaveRoom(socket, roomId, user, () => {
             setIsLeaving(false)
             navigate("/lobby")
@@ -128,7 +169,6 @@ function Room() {
         }
     }
 
-    // Close panels on mobile when clicking outside
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
@@ -159,24 +199,19 @@ function Room() {
         <div className={`min-h-screen ${theme.background}`}>
             <Toaster position="top-right" />
 
-            {/* Theme Chooser */}
             <div className="absolute top-5.5 right-15.5 z-30">
                 <ThemeChooser />
             </div>
 
-            {/* Main Layout */}
             <div className="flex flex-col h-screen">
-                {/* Header */}
                 <RoomHeader
                     roomId={roomId}
-                    phaseName="Focus" // This should come from your socket data
+                    phaseName={roomData.timer.phase === 'focus' ? roomData.settings.focusPhaseName : roomData.settings.breakPhaseName}
                     userCount={roomData.users.length}
                     isConnected={isConnected}
                 />
 
-                {/* Main Content Area */}
                 <div className="flex flex-1 overflow-hidden">
-                    {/* Left Panel */}
                     <RoomLeftPanel
                         isOpen={isLeftPanelOpen}
                         onClose={() => setLeftPanelOpen(false)}
@@ -184,18 +219,21 @@ function Room() {
                         currentUser={user}
                     />
 
-                    {/* Center Timer */}
                     <main className="flex-1 flex items-center justify-center p-4">
-                        <RoomTimer isHost={isHost} />
+                        <RoomTimer isHost={isHost} socket={socket} roomId={roomId} />
                     </main>
 
-                    {/* Right Panel */}
-                    <RoomChatPanel isOpen={isRightPanelOpen} onClose={() => setRightPanelOpen(false)} currentUser={user} />
+                    <RoomChatPanel
+                        isOpen={isRightPanelOpen}
+                        onClose={() => setRightPanelOpen(false)}
+                        currentUser={user}
+                        socket={socket}
+                        roomId={roomId}
+                    />
                 </div>
             </div>
 
-            {/* Connection Status & Leave Button */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-4">
+            <div className="absolute bottom-4 left-4 flex items-center gap-4 z-1">
                 <span className={`text-sm ${isConnected ? "text-green-600" : "text-red-600"}`}>
                     {isConnected ? "Connected to server" : "Disconnected to server"}
                 </span>
@@ -204,10 +242,10 @@ function Room() {
                         disabled={isConnecting}
                         onClick={handleReconnect}
                         className={`
-                                    text-sm px-3 py-1 rounded transition-all duration-200
-                                    ${theme.primary} ${theme.primaryText}
-                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                `}
+                            text-sm px-3 py-1 rounded transition-all duration-200
+                            ${theme.primary} ${theme.primaryText}
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                        `}
                     >
                         {isConnecting ? "Reconnecting" : "Reconnect"}
                     </button>
@@ -216,9 +254,9 @@ function Room() {
                 <button
                     onClick={handleLeaveRoom}
                     className={`
-                                text-sm px-3 py-1 rounded transition-all duration-200
-                                ${theme.secondary} ${theme.secondaryText} hover:${theme.border}
-                            `}
+                        text-sm px-3 py-1 rounded transition-all duration-200
+                        ${theme.secondary} ${theme.secondaryText} hover:${theme.border}
+                    `}
                 >
                     Leave Room
                 </button>
