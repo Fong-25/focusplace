@@ -42,7 +42,7 @@ export const useLobbyStore = create(
             // Load default settings from server
             loadDefaultSettings: async () => {
                 try {
-                    const res = await fetch('http://localhost:3000/api/rooms/default-settings', {
+                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/rooms/default-settings`, {
                         method: "GET",
                         credentials: 'include'
                     })

@@ -8,11 +8,12 @@ import http from 'http'
 import { Server } from 'socket.io'
 import { setupSocket } from './socket.js'
 import dotenv from 'dotenv'
+import path from 'path'
 
 dotenv.config()
 
 const app = express()
-
+const __dirname = path.resolve()
 
 const server = http.createServer(app)
 const io = new Server(server, {
@@ -23,7 +24,7 @@ const io = new Server(server, {
 })
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'https://letslearntogether.onrender.com'],
     credentials: true
 }))
 
@@ -31,7 +32,13 @@ setupSocket(io)
 app.use(cookieParser())
 app.use(express.json())
 
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, "../frontend/dist")))
 
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"))
+    })
+}
 
 app.get('/', (req, res) => {
     res.send("Welcome")

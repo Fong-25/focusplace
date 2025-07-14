@@ -1,0 +1,27 @@
+{
+  "name": "focusplace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run install:all && npm run build:frontend",
+    "start": "cd backend && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fong-25/focusplace.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Fong-25/focusplace/issues"
+  },
+  "homepage": "https://github.com/Fong-25/focusplace#readme"
+}
