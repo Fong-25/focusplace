@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, User, Settings, Lock } from 'lucide-react'
+import { Clock, User, Settings, Lock, Check } from 'lucide-react'
 import { useThemeStore } from '../stores/themeStore'
 
 function RoomSettings({ settings, onSettingsChange, disabled = true }) {
@@ -25,6 +25,60 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
         }
     }
 
+    const CustomCheckbox = ({ checked, onChange, disabled, children, description }) => {
+        return (
+            <label className={`flex items-start gap-3 cursor-pointer group ${disabled ? "cursor-not-allowed" : ""}`}>
+                <div className="relative flex-shrink-0 mt-0.5">
+                    {/* Hidden native checkbox */}
+                    <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} className="sr-only" />
+
+                    {/* Custom checkbox visual */}
+                    <div
+                        className={`
+                  w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center
+                  ${checked
+                                ? disabled
+                                    ? `${theme.primary} border-transparent opacity-50`
+                                    : `${theme.primary} border-transparent shadow-sm`
+                                : disabled
+                                    ? `bg-gray-100 border-gray-200 opacity-50`
+                                    : `${theme.input} ${theme.border} group-hover:border-gray-400`
+                            }
+                  ${!disabled && "group-hover:shadow-sm transform group-active:scale-95"}
+                `}
+                    >
+                        {/* Checkmark */}
+                        {checked && (
+                            <Check
+                                className={`
+                      w-3 h-3 transition-all duration-200
+                      ${disabled ? "text-white opacity-70" : "text-white"}
+                    `}
+                            />
+                        )}
+                    </div>
+
+                    {/* Focus ring */}
+                    {!disabled && (
+                        <div
+                            className={`
+                    absolute inset-0 rounded-md transition-all duration-200 pointer-events-none
+                    ${checked ? "ring-2 ring-offset-1 ring-blue-300 opacity-0" : ""}
+                    group-focus-within:opacity-100
+                  `}
+                        />
+                    )}
+                </div>
+
+                {/* Label content */}
+                <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-medium block ${disabled ? theme.textMuted : theme.text}`}>{children}</span>
+                    {description && <p className={`text-xs mt-0.5 ${theme.textMuted}`}>{description}</p>}
+                </div>
+            </label>
+        )
+    }
+
     return (
         <div className="space-y-4">
             {/* Settings Header */}
@@ -40,48 +94,31 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
             </div>
 
             {/* Control Settings */}
-            <div className={`p-3 rounded-lg ${theme.secondary}`}>
-                <h4 className={`text-xs font-medium mb-2 ${theme.secondaryText}`}>Control Settings</h4>
-                <div className="space-y-2">
+            <div className={`p-4 rounded-lg ${theme.secondary}`}>
+                <h4 className={`text-sm font-medium mb-3 ${theme.secondaryText}`}>Control Settings</h4>
+                <div className="space-y-4">
                     {/* Strict Mode */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={settings.strictMode}
-                            onChange={(e) => handleCheckboxChange("strictMode", e.target.checked)}
-                            disabled={disabled}
-                            className={`
-                                        rounded border-gray-300 text-blue-400 
-                                        focus:ring-blue-300 focus:ring-offset-0 w-3 h-3
-                                        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-                                    `}
-                        />
-                        <div className="flex-1">
-                            <span className={`text-xs font-medium ${disabled ? theme.textMuted : theme.text}`}>Strict Mode</span>
-                            <p className={`text-xs ${theme.textMuted}`}>Only host controls timer</p>
-                        </div>
-                    </label>
+
+                    <CustomCheckbox
+
+                        checked={settings.strictMode}
+                        onChange={(e) => handleCheckboxChange("strictMode", e.target.checked)}
+                        disabled={disabled}
+                        description="Only the host can control the timer"
+                    >
+                        Strict Mode
+                    </CustomCheckbox>
 
                     {/* Auto Phase Change */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={settings.autoPhaseChange}
-                            onChange={(e) => handleCheckboxChange("autoPhaseChange", e.target.checked)}
-                            disabled={disabled}
-                            className={`
-                                        rounded border-gray-300 text-blue-400 
-                                        focus:ring-blue-300 focus:ring-offset-0 w-3 h-3
-                                        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-                                    `}
-                        />
-                        <div className="flex-1">
-                            <span className={`text-xs font-medium ${disabled ? theme.textMuted : theme.text}`}>
-                                Auto Phase Change
-                            </span>
-                            <p className={`text-xs ${theme.textMuted}`}>Auto switch phases</p>
-                        </div>
-                    </label>
+                    <CustomCheckbox
+                        type="checkbox"
+                        checked={settings.autoPhaseChange}
+                        onChange={(e) => handleCheckboxChange("autoPhaseChange", e.target.checked)}
+                        disabled={disabled}
+                        description="Automatically switch between focus and break phases"
+                    >
+                        Auto Phase Change
+                    </CustomCheckbox>
                 </div>
             </div>
 

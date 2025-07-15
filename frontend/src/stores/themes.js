@@ -74,6 +74,38 @@ export const themes = {
         input: "bg-gray-700/80 border-gray-600 focus:border-gray-500 focus:ring-gray-500",
         inputText: "text-gray-100",
     },
+    forestTwilight: {
+        name: "Forest Twilight",
+        primary: "bg-emerald-600 hover:bg-emerald-700",
+        primaryText: "text-white",
+        secondary: "bg-stone-600 hover:bg-stone-500",
+        secondaryText: "text-stone-100",
+        background: "bg-gradient-to-br from-stone-900 via-green-900 to-emerald-900",
+        cardBackground: "bg-stone-800/85 backdrop-blur-sm",
+        border: "border-stone-700",
+        text: "text-stone-100",
+        textMuted: "text-stone-400",
+        input: "bg-stone-800/90 border-stone-600 focus:border-emerald-400 focus:ring-emerald-400",
+        inputText: "text-stone-100",
+        accent: "bg-lime-500 hover:bg-lime-600",
+        accentText: "text-white"
+    },
+    warmEmber: {
+        name: "Warm Ember",
+        primary: "bg-rose-600 hover:bg-rose-700",
+        primaryText: "text-white",
+        secondary: "bg-stone-600 hover:bg-stone-500",
+        secondaryText: "text-stone-100",
+        background: "bg-gradient-to-br from-stone-900 via-red-900 to-rose-900",
+        cardBackground: "bg-stone-800/85 backdrop-blur-sm",
+        border: "border-stone-700",
+        text: "text-stone-100",
+        textMuted: "text-stone-400",
+        input: "bg-stone-800/90 border-stone-600 focus:border-rose-400 focus:ring-rose-400",
+        inputText: "text-stone-100",
+        accent: "bg-orange-500 hover:bg-orange-600",
+        accentText: "text-white"
+    },
 
     // Light Themes (Softer tones)
     serenity: {
@@ -190,19 +222,5 @@ export const themes = {
         textMuted: "text-orange-700",
         input: "bg-orange-50 border-orange-200 focus:border-red-400 focus:ring-red-400",
         inputText: "text-orange-900",
-    },
-    valentine: {
-        name: "Valentine",
-        primary: "bg-pink-500 hover:bg-pink-600",
-        primaryText: "text-white",
-        secondary: "bg-purple-500 hover:bg-purple-600",
-        secondaryText: "text-pink-50",
-        background: "bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100",
-        cardBackground: "bg-pink-50/95 backdrop-blur-sm",
-        border: "border-pink-200",
-        text: "text-pink-900",
-        textMuted: "text-pink-700",
-        input: "bg-pink-50 border-pink-200 focus:border-pink-500 focus:ring-pink-500",
-        inputText: "text-pink-900",
     },
 };
