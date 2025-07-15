@@ -12,7 +12,14 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
             onSettingsChange({ [key]: value })
         }
     }
-    const handleInputChange = (key, value) => {
+    const handleInputChangeTime = (key, value) => {
+        if (!disabled) {
+            const newValue = value === '' ? '' : Math.max(1, Math.min(key === 'focusTime' ? 120 : 60, Number(value) || (key === 'focusTime' ? 25 : 5)));
+            onSettingsChange({ [key]: newValue });
+        }
+    }
+
+    const handleInputChangeName = (key, value) => {
         if (!disabled) {
             onSettingsChange({ [key]: value })
         }
@@ -92,8 +99,8 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
                             type="number"
                             min="1"
                             max="120"
-                            value={settings.focusTime}
-                            onChange={(e) => handleInputChange("focusTime", Number.parseInt(e.target.value) || 25)}
+                            value={settings.focusTime || ""}
+                            onChange={(e) => handleInputChangeTime("focusTime", e.target.value)}
                             disabled={disabled}
                             className={`
                                         w-full px-2 py-1.5 text-sm rounded-md border transition-all duration-200
@@ -114,8 +121,8 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
                             type="number"
                             min="1"
                             max="60"
-                            value={settings.breakTime}
-                            onChange={(e) => handleInputChange("breakTime", Number.parseInt(e.target.value) || 5)}
+                            value={settings.breakTime || ""}
+                            onChange={(e) => handleInputChangeTime("breakTime", e.target.value)}
                             disabled={disabled}
                             className={`
                                         w-full px-2 py-1.5 text-sm rounded-md border transition-all duration-200
@@ -142,7 +149,7 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
                             type="text"
                             maxLength="20"
                             value={settings.focusPhaseName}
-                            onChange={(e) => handleInputChange("focusPhaseName", e.target.value)}
+                            onChange={(e) => handleInputChangeName("focusPhaseName", e.target.value)}
                             disabled={disabled}
                             className={`
                                         w-full px-2 py-1.5 text-sm rounded-md border transition-all duration-200
@@ -164,7 +171,7 @@ function RoomSettings({ settings, onSettingsChange, disabled = true }) {
                             type="text"
                             maxLength="20"
                             value={settings.breakPhaseName}
-                            onChange={(e) => handleInputChange("breakPhaseName", e.target.value)}
+                            onChange={(e) => handleInputChangeName("breakPhaseName", e.target.value)}
                             disabled={disabled}
                             className={`
                                 w-full px-2 py-1.5 text-sm rounded-md border transition-all duration-200

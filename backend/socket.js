@@ -34,12 +34,12 @@ export const setupSocket = (io) => {
         console.log(` ${socket.id} connected`)
 
         // Handle room creation
-        socket.on('createRoom', ({ roomId, user }) => {
+        socket.on('createRoom', ({ roomId, user, settings }) => {
             if (rooms.has(roomId)) {
                 return socket.emit('error', { message: 'Room already exists.' })
             }
 
-            const newRoom = new Room(roomId, user.id)
+            const newRoom = new Room(roomId, user.id, settings)
             newRoom.addUser(socket.id, user)
 
             rooms.set(roomId, newRoom)
@@ -287,17 +287,33 @@ export const setupSocket = (io) => {
             if (room.timer.isRunning) {
                 room.updateTimer()
                 io.to(roomId).emit('timerUpdate', room.timer)
-                if (room.timer.timeLeft <= 0 && room.settings.autoPhaseChange) {
-                    room.switchPhase()
-                    io.to(roomId).emit('phaseSwitched')
-                    io.to(roomId).emit('timerUpdate', room.timer)
-                    io.to(roomId).emit('chatMessage', {
-                        id: Date.now(),
-                        username: "System",
-                        message: `Switched to ${room.timer.phase} phase`,
-                        timestamp: Date.now(),
-                        isSystem: true
-                    })
+                if (room.timer.timeLeft <= 0) {
+                    if (room.settings.autoPhaseChange) {
+                        room.switchPhase()
+                        io.to(roomId).emit('phaseSwitched')
+                        io.to(roomId).emit('timerUpdate', room.timer)
+                        io.to(roomId).emit('chatMessage', {
+                            id: Date.now(),
+                            username: "System",
+                            message: `Switched to ${room.timer.phase} phase`,
+                            timestamp: Date.now(),
+                            isSystem: true
+                        })
+                    } else {
+                        // Advance phase, stop timer, set to new phase duration
+                        room.switchPhase()
+                        room.timer.isRunning = false
+                        room.timer.lastUpdatedAt = null
+                        io.to(roomId).emit('phaseSwitched')
+                        io.to(roomId).emit('timerUpdate', room.timer)
+                        io.to(roomId).emit('chatMessage', {
+                            id: Date.now(),
+                            username: "System",
+                            message: `Switched to ${room.timer.phase} phase. Press Start to begin.`,
+                            timestamp: Date.now(),
+                            isSystem: true
+                        })
+                    }
                 }
             }
         }
