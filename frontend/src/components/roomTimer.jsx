@@ -3,6 +3,8 @@
 import { Play, Pause, RotateCcw } from "lucide-react"
 import { useThemeStore } from "../stores/themeStore"
 import { useLobbyStore } from "../stores/lobbyStore"
+import toast from "react-hot-toast"
+import { useEffect } from "react"
 
 function RoomTimer({ isHost = false, socket, roomId }) {
     const { getTheme } = useThemeStore()
@@ -46,6 +48,25 @@ function RoomTimer({ isHost = false, socket, roomId }) {
     const handleReset = () => {
         socket.emit('resetTimer', { roomId })
     }
+
+    // Toast on phase switch
+    useEffect(() => {
+        if (!socket) return;
+        const handlePhaseSwitched = () => {
+            if (!roomData) return;
+            const phase = roomData.timer.phase === 'focus' ? 'Break' : 'Focus'; // phase will be switched after event
+            const phaseName = phase === 'Focus' ? roomData.settings.focusPhaseName : roomData.settings.breakPhaseName;
+            toast((t) => (
+                <span>
+                    Switched to <b>{phaseName}</b> phase!
+                </span>
+            ), { id: 'phase-switched', duration: 3000 });
+        };
+        socket.on('phaseSwitched', handlePhaseSwitched);
+        return () => {
+            socket.off('phaseSwitched', handlePhaseSwitched);
+        };
+    }, [socket, roomData]);
 
     if (!roomData) return null
 

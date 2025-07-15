@@ -3,20 +3,22 @@
 import { DEFAULT_ROOM_SETTING } from "../config/constants.js";
 
 export class Room {
-    constructor(roomId, hostUserId) {
+    constructor(roomId, hostUserId, settings = {}) {
         this.id = roomId
         this.hostId = hostUserId
 
         // socket id => userId, username
         this.users = new Map()
 
+        // Merge custom settings with defaults
+        this.settings = { ...DEFAULT_ROOM_SETTING, ...settings }
+
         this.timer = {
             isRunning: false,
             phase: 'focus', // || "break"
-            timeLeft: DEFAULT_ROOM_SETTING.focusTime * 60, // in seconds
+            timeLeft: this.settings.focusTime * 60, // in seconds
             lastUpdatedAt: null
         }
-        this.settings = { ...DEFAULT_ROOM_SETTING }
         this.deleteTimeout = null
     }
 

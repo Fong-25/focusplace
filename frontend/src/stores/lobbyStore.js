@@ -33,7 +33,10 @@ export const useLobbyStore = create(
 
             // Actions
             setJoinModalOpen: (isOpen) => set({ isJoinModalOpen: isOpen }),
-            setCreateModalOpen: (isOpen) => set({ isCreateModalOpen: isOpen }),
+            setCreateModalOpen: (isOpen) => set((state) => ({
+                isCreateModalOpen: isOpen,
+                settingsEnabled: isOpen ? true : false
+            })),
             setLoading: (isLoading) => set({ isLoading }),
             setJoinRoomId: (roomId) => set({ joinRoomId: roomId }),
             setCreateRoomId: (roomId) => set({ createRoomId: roomId }),
@@ -81,6 +84,7 @@ export const useLobbyStore = create(
                     createRoomId: "",
                     isCreateModalOpen: false,
                     roomSettings: defaultRoomSettings ? { ...defaultRoomSettings } : null,
+                    settingsEnabled: false,
                 })
             },
 
