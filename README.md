@@ -1,6 +1,6 @@
 # FocusPlace
 
-[**Preview or test it out now → **](https://letslearntogether.onrender.com/)
+[**Preview or test it out now **](https://letslearntogether.onrender.com/)
 
 A full-stack, real-time productivity app for collaborative focus sessions, inspired by the Pomodoro technique. Users can create or join rooms, chat, and synchronize timers for focused work and breaks.
 
