@@ -4,6 +4,8 @@ import { persist } from "zustand/middleware"
 export const useRoomStore = create(
     persist(
         (set, get) => ({
+            soundEffectsEnabled: true,
+
             isLeftPanelOpen: false,
             isRightPanelOpen: false,
             messages: [
@@ -16,6 +18,9 @@ export const useRoomStore = create(
 
             setLeftPanelOpen: (isOpen) => set({ isLeftPanelOpen: isOpen }),
             setRightPanelOpen: (isOpen) => set({ isRightPanelOpen: isOpen }),
+
+            toggleSoundsEffect: () => set((state) => ({ soundEffectsEnabled: !state.soundEffectsEnabled })),
+            setSoundsEffect: (enabled) => set({ soundEffectsEnabled: enabled }),
 
             setNewMessage: (message) => set({ newMessage: message }),
 

@@ -13,6 +13,11 @@ import RoomHeader from "../components/roomHeader"
 import RoomTimer from "../components/roomTimer"
 import RoomLeftPanel from "../components/roomLeftPanel"
 import RoomChatPanel from "../components/roomChatPanel"
+import SoundToggle from "../components/soundToggle"
+import { Howl, Howler } from 'howler'
+import startSound from '../assets/sounds/start.wav'
+import pauseSound from '../assets/sounds/timerpause.mp3'
+import endPhase from '../assets/sounds/endphase.wav'
 
 function Room() {
     const { roomId } = useParams()
@@ -22,7 +27,7 @@ function Room() {
     const theme = getTheme()
     const { socket, isConnected } = useContext(SocketContext)
     const { roomData, setRoomData, leaveRoom } = useLobbyStore()
-    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen, addSocketMessage, clearMessages } = useRoomStore()
+    const { isLeftPanelOpen, isRightPanelOpen, setLeftPanelOpen, setRightPanelOpen, addSocketMessage, clearMessages, soundEffectsEnabled } = useRoomStore()
 
     const [isLoading, setIsLoading] = useState(true)
     const [isLeaving, setIsLeaving] = useState(false)
@@ -87,12 +92,24 @@ function Room() {
         socket.on("timerStarted", () => {
             if (!isLeaving) {
                 toast.success("Timer started")
+                if (soundEffectsEnabled) {
+                    let sound = new Howl({
+                        src: [startSound]
+                    })
+                    sound.play()
+                }
             }
         })
 
         socket.on("timerPause", () => {
             if (!isLeaving) {
                 toast.success("Timer paused")
+                if (soundEffectsEnabled) {
+                    let sound = new Howl({
+                        src: [pauseSound]
+                    })
+                    sound.play()
+                }
             }
         })
 
@@ -105,6 +122,12 @@ function Room() {
         socket.on("phaseSwitched", ({ phase }) => {
             if (!isLeaving) {
                 toast.success(`Switched to ${phase} phase`)
+                if (soundEffectsEnabled) {
+                    let sound = new Howl({
+                        src: [endPhase]
+                    })
+                    sound.play()
+                }
             }
         })
 
@@ -201,6 +224,13 @@ function Room() {
 
             <div className="absolute top-5.5 right-15.5 z-30">
                 <ThemeChooser />
+            </div>
+
+            <div className="absolute bottom-3 right-2 z-1 lg:fixed lg:bottom-0 lg:right-40 lg:z-30">
+                <div className="lg:absolute lg:bottom-0 lg:right-42">
+                    <SoundToggle />
+                </div>
+
             </div>
 
             <div className="flex flex-col h-screen">
