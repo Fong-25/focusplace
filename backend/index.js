@@ -6,7 +6,7 @@ import roomRoutes from './routes/room.route.js'
 import { connectDB } from './config/db.js'
 import http from 'http'
 import { Server } from 'socket.io'
-import { setupSocket } from './socket.js'
+import { setupSocket } from './socket/index.js'
 import dotenv from 'dotenv'
 import path from 'path'
 
