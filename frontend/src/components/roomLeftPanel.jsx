@@ -3,7 +3,7 @@
 import { X, Settings, Users, Crown, User } from "lucide-react"
 import { useThemeStore } from "../stores/themeStore"
 
-function RoomLeftPanel({ isOpen, onClose, roomData, currentUser }) {
+function RoomLeftPanel({ isOpen, onClose, roomData, currentUser, activeSpeakers = new Set() }) {
     const { getTheme } = useThemeStore()
     const theme = getTheme()
 
@@ -71,44 +71,63 @@ function RoomLeftPanel({ isOpen, onClose, roomData, currentUser }) {
                                 <h3 className={`text-sm font-semibold ${theme.text}`}>Users ({roomData?.users?.length || 0})</h3>
                             </div>
                             <div className="space-y-2">
-                                {roomData?.users?.map((roomUser) => (
-                                    <div
-                                        key={roomUser.id}
-                                        className={`
-                                                    p-3 rounded-lg border transition-all duration-200
-                                                    ${theme.secondary} ${theme.border}
-                                                    ${roomUser.id === currentUser?.id ? "ring-2 ring-blue-400" : ""}
-                                                `}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className={`
-                                                            w-8 h-8 rounded-full flex items-center justify-center
-                                                            ${roomUser.id === roomData.hostId ? "bg-yellow-500" : theme.primary}
-                                                        `}
-                                            >
-                                                {roomUser.id === roomData.hostId ? (
-                                                    <Crown className="w-4 h-4 text-white" />
-                                                ) : (
-                                                    <User className="w-4 h-4 text-white" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className={`text-sm font-medium ${theme.text}`}>{roomUser.username}</h4>
-                                                    {roomUser.id === currentUser?.id && (
-                                                        <span className={`text-xs px-2 py-0.5 rounded ${theme.primary} ${theme.primaryText}`}>
-                                                            You
-                                                        </span>
+                                {roomData?.users?.map((roomUser) => {
+                                    const isSpeaking = activeSpeakers.has(roomUser.id)
+                                    return (
+                                        <div
+                                            key={roomUser.id}
+                                            className={`
+                                                p-3 rounded-lg border transition-all duration-200
+                                                ${theme.secondary} ${theme.border}
+                                                ${roomUser.id === currentUser?.id ? "ring-2 ring-blue-400" : ""}
+                                                ${isSpeaking ? "ring-2 ring-green-400 shadow-lg" : ""}
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className={`
+                                                        w-8 h-8 rounded-full flex items-center justify-center relative
+                                                        ${roomUser.id === roomData.hostId ? "bg-yellow-500" : theme.primary}
+                                                    `}
+                                                >
+                                                    {roomUser.id === roomData.hostId ? (
+                                                        <Crown className="w-4 h-4 text-white" />
+                                                    ) : (
+                                                        <User className="w-4 h-4 text-white" />
+                                                    )}
+
+                                                    {/* Speaking pulse indicator */}
+                                                    {isSpeaking && (
+                                                        <span className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping"></span>
                                                     )}
                                                 </div>
-                                                <p className={`text-xs ${theme.textMuted}`}>
-                                                    {roomUser.id === roomData.hostId ? "Host" : "Member"}
-                                                </p>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className={`text-sm font-medium ${theme.text}`}>{roomUser.username}</h4>
+                                                        {roomUser.id === currentUser?.id && (
+                                                            <span className={`text-xs px-2 py-0.5 rounded ${theme.primary} ${theme.primaryText}`}>
+                                                                You
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <p className={`text-xs ${theme.textMuted}`}>
+                                                            {roomUser.id === roomData.hostId ? "Host" : "Member"}
+                                                        </p>
+
+                                                        {/* Voice status indicator */}
+                                                        {isSpeaking && (
+                                                            <div className="flex items-center gap-1">
+                                                                <Mic className="w-3 h-3 text-green-500" />
+                                                                <span className="text-xs text-green-500 font-medium">Speaking</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>
