@@ -4,6 +4,7 @@ import { createSystemMessage, messageTemplates } from './utils/system.js'
 import { roomHandlers } from './handlers/room.handler.js'
 import { chatHandlers } from './handlers/chat.handler.js'
 import { timerHandlers } from './handlers/timer.handler.js'
+import { voiceHandlers } from './handlers/voice.handler.js'
 import { startTimerSync } from './services/timerSync.service.js'
 
 import dotenv from 'dotenv'
@@ -41,6 +42,7 @@ export const setupSocket = (io) => {
         roomHandlers(io, socket, rooms)
         chatHandlers(io, socket, rooms)
         timerHandlers(io, socket, rooms)
+        voiceHandlers(io, socket, rooms)
 
         // Handle disconnection
         socket.on('disconnect', () => {
