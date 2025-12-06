@@ -7,6 +7,7 @@ import { useThemeStore } from "../stores/themeStore"
 import { useLobbyStore } from "../stores/lobbyStore"
 import { useRoomStore } from "../stores/roomStore"
 import { SocketContext } from "../contexts/socketContext"
+import { useVoiceChat } from "../hooks/useVoiceChat"
 import toast, { Toaster } from "react-hot-toast"
 import ThemeChooser from "../components/themeChooser"
 import RoomHeader from "../components/roomHeader"
@@ -14,6 +15,7 @@ import RoomTimer from "../components/roomTimer"
 import RoomLeftPanel from "../components/roomLeftPanel"
 import RoomChatPanel from "../components/roomChatPanel"
 import SoundToggle from "../components/soundToggle"
+import VoiceControls from "../components/voiceControls"
 import { Howl, Howler } from 'howler'
 import startSound from '../assets/sounds/start.wav'
 import pauseSound from '../assets/sounds/timerpause.mp3'
@@ -35,6 +37,16 @@ function Room() {
 
     const isHost = roomData?.hostId === user?.id
 
+    // Voice chat hook
+    const {
+        isMuted,
+        isConnecting: isVoiceConnecting,
+        audioEnabled,
+        activeSpeakers,
+        toggleMute,
+        joinVoiceChat
+    } = useVoiceChat(socket, roomId, user?.id)
+
     useEffect(() => {
         if (!socket || !isConnected) {
             toast.error("Not connected to server")
@@ -46,6 +58,10 @@ function Room() {
             if (!isLeaving) {
                 setRoomData(data)
                 setIsLoading(false)
+
+                // Auto-join voice chat
+                const userIds = data.users.map(u => u.id)
+                joinVoiceChat(userIds)
             }
         })
 
@@ -158,7 +174,7 @@ function Room() {
             socket.off('phaseSwitched')
             socket.off("error")
         }
-    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving, addSocketMessage, clearMessages])
+    }, [socket, isConnected, roomId, user, roomData, setRoomData, navigate, leaveRoom, isLeaving, addSocketMessage, clearMessages, joinVoiceChat])
 
     const handleLeaveRoom = () => {
         setIsLeaving(true)
@@ -227,8 +243,15 @@ function Room() {
             </div>
 
             <div className="absolute bottom-3 right-2 z-1 lg:fixed lg:bottom-0 lg:right-40 lg:z-30">
-                <div className="lg:absolute lg:bottom-0 lg:right-42">
+                <div className="=flex flex-col gap-4 lg:absolute lg:bottom-0 lg:right:42">
                     <SoundToggle />
+                    <VoiceControls
+                        isMuted={isMuted}
+                        isConnecting={isVoiceConnecting}
+                        onToggleMute={toggleMute}
+                        activeSpeakers={activeSpeakers}
+                        currentUserId={user?.id}
+                    />
                 </div>
 
             </div>
@@ -247,6 +270,7 @@ function Room() {
                         onClose={() => setLeftPanelOpen(false)}
                         roomData={roomData}
                         currentUser={user}
+                        activeSpeakers={activeSpeakers}
                     />
 
                     <main className="flex-1 flex items-center justify-center p-4">

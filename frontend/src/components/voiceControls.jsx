@@ -1,9 +1,9 @@
 'use client'
 import { Mic, MicOff } from 'lucide-react'
-import { useThemStore } from '../stores/themeStore'
+import { useThemeStore } from '../stores/themeStore'
 
 export default function VoiceControls({ isMuted, isConnecting, onToggleMute, activeSpeakers = new Set(), currentUserId }) {
-    const { getTheme } = useThemStore()
+    const { getTheme } = useThemeStore()
     const theme = getTheme()
 
     const isCurrentUserSpeaking = activeSpeakers.has(currentUserId) && !isMuted
