@@ -40,6 +40,10 @@ if (process.env.NODE_ENV === 'production') {
     })
 }
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: "ok" })
+})
+
 app.get('/', (req, res) => {
     res.send("Welcome")
 })

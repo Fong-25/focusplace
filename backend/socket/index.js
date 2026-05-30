@@ -5,6 +5,7 @@ import { roomHandlers } from './handlers/room.handler.js'
 import { chatHandlers } from './handlers/chat.handler.js'
 import { timerHandlers } from './handlers/timer.handler.js'
 import { startTimerSync } from './services/timerSync.service.js'
+import { startKeepAlive } from '../services/alive.service.js'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -41,6 +42,7 @@ export const setupSocket = (io) => {
         roomHandlers(io, socket, rooms)
         chatHandlers(io, socket, rooms)
         timerHandlers(io, socket, rooms)
+        startKeepAlive(rooms)
 
         // Handle disconnection
         socket.on('disconnect', () => {
