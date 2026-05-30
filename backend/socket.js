@@ -1,3 +1,4 @@
+// This file is unused. The actual logic sits in socket/index.js
 // socket.js
 import jwt from 'jsonwebtoken'
 import cookie from 'cookie'
